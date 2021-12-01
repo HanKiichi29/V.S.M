@@ -16,6 +16,7 @@ public class AllEnmy : MonoBehaviour
 
     protected bool Rendered=false;
     protected bool Stop=true;
+
     #region 敵のステータス
 
    [SerializeField]protected float EnmySpeed;

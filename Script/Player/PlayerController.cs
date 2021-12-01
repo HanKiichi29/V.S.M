@@ -11,18 +11,6 @@ using UniRx;
 /// </summary>
 public class PlayerController : MonoBehaviour
 {
-
-    /*  GameObject Clone = Instantiate(Magic, Stick.transform.position, Quaternion.Euler(0, transform.rotation.eulerAngles.y, 0));
-
-               Clone.GetComponent<ParticleSystem>().Play();
-
-               Clone.GetComponent<Rigidbody>().AddForce(Clone.transform.forward * 5, ForceMode.Impulse);
-
-               yield return new WaitForSeconds(MagicCoolTime);
-
-               Clone.GetComponent<ParticleSystem>().Stop();   */
-
-
     #region 変数
 
 
@@ -59,9 +47,10 @@ public class PlayerController : MonoBehaviour
     //重力
     private float GravityScael;
 
-   
-
+   //string//
     private const string GroundName = "Ground";
+    private const string BalloonName = "Balloon";
+    private const string EnmyName = "Ground";
 
     Rigidbody PlayerGrvity;
     Vector3 StartPosition;
@@ -178,6 +167,8 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+
+
     public void Clear()
     {
         transform.rotation = Quaternion.Euler(0, 180, 0);
@@ -189,41 +180,42 @@ public class PlayerController : MonoBehaviour
 
 
     //魔法での瞬間移動
-
     private void Teleport()
     {
 
-        CooltimeDisplay();
-        float MoveDistance = 6.5f;
-        Ray ray = new Ray(transform.position,transform.forward);
-        RaycastHit hit;
-        if(Physics.Raycast(ray,out hit,MoveDistance))
-        {
-            if(!forward)
-            {
-                transform.position = hit.point + new Vector3(transform.localScale.x, 0, 0);
-            }
-            else
-            {
-                transform.position = hit.point - new Vector3(transform.localScale.x, 0, 0);
-            }
-            return;
-        }
-       
-        transform.position += transform.forward * MoveDistance;
-        CooltimeDisplay();
+         float MoveDistance = 6.5f;
+         Ray ray = new Ray(transform.position,transform.forward);
+         RaycastHit hit;
+         if(Physics.Raycast(ray,out hit,MoveDistance))
+         {
+             if(!forward)
+             {
+                 transform.position = hit.point + new Vector3(transform.localScale.x, 0, 0);
+             }
+             else
+             {
+                 transform.position = hit.point - new Vector3(transform.localScale.x, 0, 0);
+             }
+             return;
+         }
 
+         transform.position += transform.forward * MoveDistance;
+
+         
+        
     }
 
 
     //瞬間移動を使った時のクールタイムを表示する
     private void CooltimeDisplay()
     {
+
+
         
     }
 
     #region 当たり判定処理
-
+     
     private void OnCollisionStay(Collision collision)
     {
         if (collision.gameObject.tag == GroundName)
@@ -235,14 +227,16 @@ public class PlayerController : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (collision.gameObject.tag == "Enmy")
+        if (collision.gameObject.tag == EnmyName)
         {
            dead.DeadEnmy();
         }
 
-        if (transform.parent == null && collision.gameObject.tag == "Balloon")
+        if (transform.parent == null && collision.gameObject.tag == BalloonName)
         {
             PlayerGrvity.velocity = Vector3.zero;
+
+            //180度回転させ前を向けさせる
             this.transform.rotation = Quaternion.Euler(0, 180, 0);
 
             var playerobject = new GameObject();
@@ -266,9 +260,8 @@ public class PlayerController : MonoBehaviour
             Groundflag = false;
         }
 
-        if (transform.parent != null && collision.gameObject.tag == "Balloon")
+        if (transform.parent != null && collision.gameObject.tag == BalloonName)
         {
-            
 
             Move = true;
             transform.parent = null;

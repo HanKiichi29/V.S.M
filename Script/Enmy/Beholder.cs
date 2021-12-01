@@ -11,6 +11,7 @@ using DG.Tweening;
 public class Beholder : AllEnmy
 {
 
+    [SerializeField] private float MoveDistance;
 
 
     private void Start()
@@ -19,7 +20,7 @@ public class Beholder : AllEnmy
 
         EnmyAnimation = GetComponent<Animator>();
 
-        this.transform.DOMoveY(3, EnmySpeed)
+        this.transform.DOMoveY(MoveDistance, EnmySpeed)
                 .SetLoops(-1, LoopType.Yoyo)
                 .SetRelative()
                 .SetLink(gameObject)

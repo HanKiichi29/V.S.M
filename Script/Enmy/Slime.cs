@@ -20,6 +20,7 @@ public class Slime : AllEnmy
         EnmySpeed = 4;
 
         SlimeMove();
+     
     }
 
     private void SlimeMove()
@@ -37,6 +38,9 @@ public class Slime : AllEnmy
         T_SlimeMove.Play();
 
     }
+
+
+   
 
     protected override void EnmyCameraUpdate()
     {
