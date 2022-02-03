@@ -12,39 +12,42 @@ using UnityEngine.UI;
 /// </summary>
 
 public class StageSelectBallon : MonoBehaviour
-{
-
-    
+{   
 
     [SerializeField] private GameObject Balloon;
-    [SerializeField] private GameObject CorsePanel;
+    [SerializeField] private GameObject CoursePanel;
 
-    [SerializeField] private Text CorseNameText;
+    [SerializeField] private Text CourseNameText;
     [SerializeField] private Image FadePanel;
 
-    private int SelectNunmber;
-    private int CorceDate=0;
+    [SerializeField] private AudioClip ClickSE;
 
+    private static int SelectNunmber;
+    private static int CourseDate = 0;
+    private static int SelectCourse;
     private float BalloomMoveTime;
+
     private AudioSource audioSource;
 
-    bool Moveing;
+    //気球の初期位置
+    private static Vector3 NowPosition = new Vector3(-100, 8, 0);
 
+    public bool Moving;
 
-    
-
+    private void Awake()
+    {
+        
+    }
     private void Start()
     {
 
-        //CorceDate = PlayerPrefs.GetInt("Corse");
-        CorceDate = 3;
-        Moveing = true;
-
-
-        
+        CourseDate = PlayerPrefs.GetInt("Course");
+        Moving = true;
 
         StageNumber();
         FadeOut();
+
+        Balloon.transform.position = NowPosition;
 
 
         audioSource=GetComponent<AudioSource>();
@@ -52,29 +55,32 @@ public class StageSelectBallon : MonoBehaviour
         BalloomMoveTime = 3.3f;
 
         Observable.EveryUpdate()
-            .Where(_ => Input.GetKeyDown(KeyCode.A) && Moveing == false)
+            .Where(_ => Input.GetKeyDown(KeyCode.A) && Moving == false)
             .ThrottleFirst(TimeSpan.FromSeconds(BalloomMoveTime))
             .Subscribe(_ => MoveLeft()).AddTo(this);
 
         Observable.EveryUpdate()
-            .Where(_ => Input.GetKeyDown(KeyCode.D) && Moveing == false)
+            .Where(_ => Input.GetKeyDown(KeyCode.D) && Moving == false)
             .ThrottleFirst(TimeSpan.FromSeconds(BalloomMoveTime))
             .Subscribe(_ => MoveRight()).AddTo(this);
 
         Observable.EveryUpdate()
-            .Where(_ => Input.GetKeyDown(KeyCode.Return)&&Moveing==false)
+            .Where(_ => Input.GetKeyDown(KeyCode.Return)&&Moving==false)
             .ThrottleFirst(TimeSpan.FromSeconds(BalloomMoveTime))
             .Subscribe(_ => Select()).AddTo(this);
 
-  
-        
+
+        if (CourseDate >= SelectCourse)
+        {
+            SelectCourse = CourseDate;
+        }
 
     }
 
 
     private void FadeOut()
     {
-        FadePanel.DOFade(0, 1.5f).OnComplete(() => { Moveing = false; })
+        FadePanel.DOFade(0, 1.5f).OnComplete(() => { Moving = false; })
             .SetLink(gameObject)
             .SetDelay(1.5f);
     }
@@ -85,7 +91,7 @@ public class StageSelectBallon : MonoBehaviour
     void MoveRight()
     {
         
-        if (SelectNunmber >= CorceDate)
+        if (SelectNunmber >= SelectCourse)
         {
             return;
         }
@@ -119,21 +125,38 @@ public class StageSelectBallon : MonoBehaviour
 
     void Select()
     {
-        Moveing = true;
-        PlayerPrefs.SetInt("Corse", SelectNunmber);
+        Moving = true;
 
-        audioSource.DOFade(0, 1.5f);
+        PlayerPrefs.SetInt("Course", SelectNunmber);
+        NowPosition = Balloon.transform.position;
+
+        AudioSetting();
+
         FadePanel.DOFade(1, 1.5f)
             .SetLink(gameObject)
             .OnComplete(() => 
             {
-                string StageName = "Stage" + (SelectNunmber+1).ToString();
-                SceneManager.LoadScene(StageName);
+                if (5 <= SelectNunmber + 1)
+                {
+                    SceneManager.LoadScene("Staffroll");
+                }
+                else
+                {
+                    string StageName = "Stage" + (SelectNunmber + 1).ToString();
+                    SceneManager.LoadScene(StageName);
+                }
+               
             })
         
        .SetDelay(1.5f);
        
 
+    }
+
+    void AudioSetting()
+    {
+        audioSource.DOFade(0, 1.5f);
+        audioSource.PlayOneShot(ClickSE);
     }
 
 
@@ -144,10 +167,10 @@ public class StageSelectBallon : MonoBehaviour
         StageNumber();
 
 
-        CorsePanel.transform.DOMoveY(-220, 0.1f).SetRelative()
-            .SetEase(Ease.InOutSine)
+        CoursePanel.transform.DOMoveY(-220, 0.1f).SetRelative()
+            .SetEase(Ease.Linear)
             .SetLink(gameObject)
-            .OnComplete(() => { Moveing = false; });
+            .OnComplete(() => { Moving = false; });
         
         
             
@@ -155,12 +178,13 @@ public class StageSelectBallon : MonoBehaviour
 
     void CorsePanelUp()
     {
-        Moveing = true;
-        
-     
-            CorsePanel.transform.DOMoveY(220, 0.1f).SetRelative()
-                .SetEase(Ease.InOutSine)
-                .SetLink(gameObject);
+        Moving = true;
+
+
+        CoursePanel.transform.DOMoveY(220, 0.1f)
+            .SetRelative()
+            .SetEase(Ease.InOutSine)
+            .SetLink(gameObject);
    
         
     }
@@ -168,23 +192,18 @@ public class StageSelectBallon : MonoBehaviour
 
     void StageNumber()
     {
-
         
-        switch (SelectNunmber)
+        //４ステージしかないため本来ステージ5以上になると別のテキストを表示する
+        if (5 <= SelectNunmber + 1)
         {
-            case 0:
-                CorseNameText.text = "1-1";
-                break;
-            case 1:
-                CorseNameText.text = "1-2";
-                break;
-            case 2:
-                CorseNameText.text = "1-3";
-                break;
-            case 3:
-                CorseNameText.text = "1-4";
-                break;
+            CourseNameText.text = "Staffroll";
+           // Debug.Log("ステージ5以上はないよ");
         }
+        else
+        {
+            CourseNameText.text = "1-" + (SelectNunmber + 1);
+        }
+        
     }
 
 

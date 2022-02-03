@@ -15,21 +15,19 @@ public class BalloonMove : MonoBehaviour
     [SerializeField] private GameObject Balloon;
     [SerializeField] private GameObject GetOffObject;
 
-     private PlayerController controller;
-     private GameObject player;
+    private PlayerController controller;
+    private GameObject player;
 
-    private float Balloonforeground = 20;
-    private float BalloonBack = 60;
+    private const float Balloonforeground = 20;
+    private const float BalloonBack = 60;
 
-    Vector3 StartPosition;
+    
 
     private void Start()
     {
         var P= GameObject.FindGameObjectWithTag("Player");
         player = P;
         controller = P.GetComponent<PlayerController>();
-
-        StartPosition = Balloon.transform.position;
     }
 
 
@@ -67,19 +65,17 @@ public class BalloonMove : MonoBehaviour
 
     }
 
+    /// <summary>
+    /// ãCãÖÇ©ÇÁèoÇΩÇ∆Ç´Ç…â°Çå¸Ç¢ÇƒÇ≈ÇÈ
+    /// </summary>
     void GetOff()
     {
         var GoalPos = GetOffObject.transform.position + Vector3.right * 2;
         player.transform.position = GoalPos;
 
-        Invoke("ResetBalloon", 1.5f);
-
     }
 
-    void ResetBalloon()
-    {
-        Balloon.transform.position = StartPosition;
-    }
+  
 
     #endregion
 

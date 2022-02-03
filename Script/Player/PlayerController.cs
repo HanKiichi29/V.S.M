@@ -5,10 +5,12 @@ using UnityEngine;
 using UnityEngine.UI;
 using UniRx;
 
-
 /// <summary>
 /// プレイヤーの処理
 /// </summary>
+
+[RequireComponent(typeof(Rigidbody))]
+[RequireComponent(typeof(CapsuleCollider))]
 public class PlayerController : MonoBehaviour
 {
     #region 変数
@@ -23,58 +25,69 @@ public class PlayerController : MonoBehaviour
     //プレイヤーの速度制限
     [SerializeField] private float PlayerMaxSpeed;
 
-    //魔法攻撃
-    [SerializeField] private int MagicCoolTime;
-
+    //魔法のクールタイム
+    [SerializeField] private float CoolTime;
+    //このDはDisplyのDです
+    private float D_Colltime;
+    //魔法のクールタイムを表示するテキスト
     [SerializeField] private Text MagicCoolTimeText;
 
     [SerializeField] private Dead dead;
 
-   
-    
+
+    //プレイヤーの操作をとめる
+    public bool Move = true;
 
     //private関数//
 
-    //プレイヤーの操作をとめる
-    public bool Move=true;
 
     //地面のフラッグ
-    private bool Groundflag=false;
+    private bool Groundflag = false;
+
+    private bool Forward = true;
+
+    private bool AnimStop = true;
+
+    private bool Timer = false;
 
     //プレイヤーのアニメーション
     private Animator animator;
+    //AudioSourec
+    private AudioSource PlayerAudio;
 
     //重力
-    private float GravityScael;
+    private float GravityScale = -20.8f;
+    Rigidbody PlayerGrvity;
 
-   //string//
+    #region TagName
+    //string//
     private const string GroundName = "Ground";
     private const string BalloonName = "Balloon";
-    private const string EnmyName = "Ground";
+    private const string EnmyName = "Enmy";
+    private const string WallName = "MagicWall";
 
-    Rigidbody PlayerGrvity;
-    Vector3 StartPosition;
-    bool forward = true;
+    #endregion
+
     #endregion
 
     void Start()
     {
-
-        Application.targetFrameRate =60;
-
+       
+        ResetCoolTime();
 
         //プレイヤーのRigidbodyの取得
         PlayerGrvity = GetComponent<Rigidbody>();
         animator = GetComponent<Animator>();
+        PlayerAudio = GetComponent<AudioSource>();
 
-        StartPosition = transform.position;
+       // StartPosition = transform.position;
 
         //プレイヤー右に移動
         Observable.EveryUpdate()
             .Where(_=>(Input.GetKey(KeyCode.D) && !Input.GetKey(KeyCode.A) && Move == true))
             .Subscribe(_ => 
             {
-                forward = true;
+                Forward = true;
                 PlayerMove();
             })
             .AddTo(this);
@@ -84,7 +97,7 @@ public class PlayerController : MonoBehaviour
             .Where(_=>(Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.D) && Move==true))
             .Subscribe(_ =>
             {
-                forward = false;
+                Forward = false;
                 PlayerMove();
             })
             .AddTo(this);
@@ -98,22 +111,31 @@ public class PlayerController : MonoBehaviour
         //テレポートの魔法
         Observable.EveryUpdate()
             .Where(_ => Input.GetKeyDown(KeyCode.Return) && Move == true)
-            .ThrottleFirst(TimeSpan.FromSeconds(MagicCoolTime))
+            .ThrottleFirst(TimeSpan.FromSeconds(CoolTime))
             .Subscribe(_ =>Teleport()).AddTo(this);
 
 
         Observable.EveryUpdate()
-            .Subscribe(_ =>PlayerGrvity.AddForce(new Vector3(0,-20.8f,0),ForceMode.Acceleration)).AddTo(this);
+            .Subscribe(_ => PlayerGrvity.AddForce(new Vector3(0, GravityScale, 0), ForceMode.Acceleration)).AddTo(this);
 
         //プレイヤーの歩くアニメーション
         Observable.EveryUpdate()
+            .Where(_=>AnimStop)
             .Subscribe(_ => WalkAnimation()).AddTo(this);
+
+        //魔法を使った時のクールタイムの表示
+        Observable.EveryUpdate()
+            .Where(_ => Timer)
+            .Subscribe(_ => CooltimeDisplay()).AddTo(this);
+            
 
 
     }
 
    
-    
+    /// <summary>
+    /// 動いているときのアニメーション
+    /// </summary>
     private void WalkAnimation()
     {
         if (PlayerGrvity.velocity.magnitude > 0.1f)
@@ -127,7 +149,9 @@ public class PlayerController : MonoBehaviour
     }
 
    
-
+    /// <summary>
+    /// プレイヤーの移動処理。速度制限付き
+    /// </summary>
     private void PlayerMove()
     {
 
@@ -142,9 +166,12 @@ public class PlayerController : MonoBehaviour
         PlayerLook();
     }
 
+    /// <summary>
+    /// プレイヤーが向いている方向に回転する
+    /// </summary>
     void PlayerLook()
     {
-        if (forward)
+        if (Forward)
         {
             transform.rotation = Quaternion.LookRotation(-Vector3.left);
 
@@ -156,9 +183,9 @@ public class PlayerController : MonoBehaviour
 
     }
 
-
-
-
+    /// <summary>
+    /// ジャンプ。至って普通のジャンプ
+    /// </summary>
     private void Jump()
     {
         if (Groundflag)
@@ -168,53 +195,86 @@ public class PlayerController : MonoBehaviour
     }
 
 
-
+    /// <summary>
+    /// クリアした時のアニメーション再生
+    /// </summary>
     public void Clear()
     {
         transform.rotation = Quaternion.Euler(0, 180, 0);
         Move = false;
         animator.SetTrigger("Clear");
     }
-
    
 
-
-    //魔法での瞬間移動
+    /// <summary>
+    /// 特定の壁をすり抜けることができる魔法
+    /// </summary>
     private void Teleport()
     {
 
-         float MoveDistance = 6.5f;
-         Ray ray = new Ray(transform.position,transform.forward);
-         RaycastHit hit;
-         if(Physics.Raycast(ray,out hit,MoveDistance))
-         {
-             if(!forward)
-             {
-                 transform.position = hit.point + new Vector3(transform.localScale.x, 0, 0);
-             }
-             else
-             {
-                 transform.position = hit.point - new Vector3(transform.localScale.x, 0, 0);
-             }
-             return;
-         }
+        Timer = true;
+        PlayerAudio.PlayOneShot(PlayerAudio.clip);
 
-         transform.position += transform.forward * MoveDistance;
+        float MoveDistance = 6.5f;
+        Ray ray = new Ray(transform.position, transform.forward);
+        RaycastHit hit;
+        if(Physics.Raycast(ray,out hit, MoveDistance))
+        {
+            if (hit.collider.gameObject.tag == WallName)
+            {
+                transform.position += transform.forward * MoveDistance;
+                return;
+            }
+            if (!Forward)
+            {
+                transform.position = hit.point + new Vector3(transform.localScale.x, 0, 0);
 
-         
+            }
+            else
+            {
+                transform.position = hit.point - new Vector3(transform.localScale.x, 0, 0);
+            }
+           
+            return;
+
+        }
+
+
+        transform.position += transform.forward * MoveDistance;
         
+  
     }
+
 
 
     //瞬間移動を使った時のクールタイムを表示する
     private void CooltimeDisplay()
     {
 
-
+        if (D_Colltime >=0)
+        {
+            D_Colltime -= Time.deltaTime;
+            MagicCoolTimeText.text = D_Colltime.ToString("F0");
+        }
+        else
+        {
+            ResetCoolTime();
+            Timer = false;
+            
+        }
         
     }
 
-    #region 当たり判定処理
+    /// <summary>
+    /// クールタイムのリセット
+    /// </summary>
+    private void ResetCoolTime()
+    {
+        D_Colltime = CoolTime;
+        MagicCoolTimeText.text = " ";
+    }
+
+    #region 各当たり判定処理
      
     private void OnCollisionStay(Collision collision)
     {
@@ -244,10 +304,7 @@ public class PlayerController : MonoBehaviour
             transform.parent = playerobject.transform;
         }
 
-        if (collision.gameObject.tag == "FallGround")
-        {
-            transform.position = StartPosition;
-        }
+        
     }
 
 
@@ -274,5 +331,4 @@ public class PlayerController : MonoBehaviour
     #endregion
 
   
-
 }

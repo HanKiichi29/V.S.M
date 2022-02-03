@@ -4,7 +4,9 @@ using UnityEngine;
 using UniRx;
 using DG.Tweening;
 
-
+/// <summary>
+/// 敵キャラスライムの処理
+/// </summary>
 public class Slime : AllEnmy
 {
 

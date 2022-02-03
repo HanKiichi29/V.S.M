@@ -40,11 +40,11 @@ public class Clear : MonoBehaviour
         Observable.EveryUpdate()
             .Where(_ => Input.GetKeyDown(KeyCode.Return)&&Click==true)
             .Subscribe(_ => BackSelect()).AddTo(this);
-
-
-
     }
 
+    /// <summary>
+    /// ゲーム開始時のフェイドアウト
+    /// </summary>
     public void GameStaet()
     {
         ClearFadePanel.DOFade(0, 0.5f).SetLink(gameObject);
@@ -63,41 +63,18 @@ public class Clear : MonoBehaviour
         }
     }
 
+
+    /// <summary>
+    /// ステージクリアしたときの処理
+    /// </summary>
     private void StageClear()
     {
         ClearStop = false;
 
         int CorseDate = PlayerPrefs.GetInt("Corse");
-     
-        switch (CorseDate)
-        {
-            case 0:
-                if (CorseDate < 1)
-                {
-                    CorseDate += 1;
-                }
-                break;
-            case 1:
-                if (CorseDate < 2)
-                {
-                    CorseDate += 1;
-                }
-               
-                break;
-
-            case 2:
-                if (CorseDate < 3)
-                {
-                    CorseDate += 1;
-                }
-                
-                break;
-            case 3:
-               
-                break;
-        }
-
-        PlayerPrefs.SetInt("Corse", CorseDate);
+        CorseDate++;
+        
+        PlayerPrefs.SetInt("Course", CorseDate);
 
         controller.Clear();
         ClearFadePanel.DOFade(1, FadeSpeed).OnComplete(()=> { ClearSelect(); });

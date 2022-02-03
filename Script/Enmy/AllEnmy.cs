@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// すべての敵の共通の処理
+/// </summary>
 public class AllEnmy : MonoBehaviour
 {
 
@@ -10,12 +13,12 @@ public class AllEnmy : MonoBehaviour
     private const string MainCamera = "MainCamera";
     private const string PlayerTag = "Player";
 
-
     protected Animator EnmyAnimation;
     protected Transform PlayerPosition;
 
     protected bool Rendered=false;
     protected bool Stop=true;
+
 
     #region 敵のステータス
 
@@ -35,12 +38,18 @@ public class AllEnmy : MonoBehaviour
     }
 
   
+    /// <summary>
+    /// 画面に映ったか判定する
+    /// </summary>
     protected virtual void EnmyCameraUpdate()
     {
        
 
     }
 
+    /// <summary>
+    /// 画面から見えなくなったら動きを止める
+    /// </summary>
     private void OnWillRenderObject()
     {
         if (Camera.current.tag == MainCamera)
@@ -54,6 +63,11 @@ public class AllEnmy : MonoBehaviour
         Rendered = false;
     }
 
+
+    /// <summary>
+    /// プレイヤーに当たった時の処理
+    /// </summary>
+    /// <param name="collision"></param>
     public void OnCollisionEnter(Collision collision)
     {
         if (collision.gameObject.tag == PlayerTag)
@@ -73,6 +87,9 @@ public class AllEnmy : MonoBehaviour
 
     }
 
+    /// <summary>
+    /// 敵キャラクターが死亡した時のアニメーション
+    /// </summary>
     protected virtual void DeadEnmy()
     {
         Stop = false;

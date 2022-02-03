@@ -12,11 +12,11 @@ public class Dead : MonoBehaviour
 {
     [SerializeField] private Image DeadPanel;
     [SerializeField] private Text DeadText;
-    [SerializeField] private GameObject player;
-    
 
+    private GameObject player;  
     private AudioSource DeadSound;
     private PlayerController controller;
+
     private void Start()
     {
         DeadSound = GetComponent<AudioSource>();
@@ -31,27 +31,24 @@ public class Dead : MonoBehaviour
     public void DeadEnmy()
     {
         controller.Move = false;
-        DeadSound.Play();
 
-        DeadPanel.DOFade(1, 3)
-            .OnComplete(() => { DeadSelect(); });
-    }
+        DeadPanel.DOFade(1, 0.5f);
 
-    private void DeadSelect()
-    {
+        //ƒƒCƒ“BGM‚ðÁ‚µ‚ÄŽ€–SŽž‚ÌŒø‰Ê‰¹‚ð–Â‚ç‚·
+        DeadSound.DOFade(0, 2);
 
-        DeadText.DOText("Why did you kill?", 0.5f)
-            .OnComplete(() => { BackSelect();  });
-
-
+        DeadText.DOFade(1, 1)
+           .OnComplete(() => { BackSelect(); });
 
     }
+
+   
 
     public void BackSelect()
     {
         DeadText.DOFade(0, 2)
             .SetLink(gameObject)
-            .SetDelay(5)
+            .SetDelay(3)
             .OnComplete(() => {
 
                 SceneManager.LoadScene("StageSelect"); 

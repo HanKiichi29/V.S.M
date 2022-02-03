@@ -10,9 +10,11 @@ using DG.Tweening;
 
 public class Beholder : AllEnmy
 {
-
+    //このモンスターの動ける範囲を変更できる
     [SerializeField] private float MoveDistance;
 
+    //TはTweenのTです
+    private Tween T_BeholderMove;
 
     private void Start()
     {
@@ -20,17 +22,22 @@ public class Beholder : AllEnmy
 
         EnmyAnimation = GetComponent<Animator>();
 
-        this.transform.DOMoveY(MoveDistance, EnmySpeed)
-                .SetLoops(-1, LoopType.Yoyo)
-                .SetRelative()
-                .SetLink(gameObject)
-                .SetEase(Ease.InOutSine);
+        T_BeholderMove = transform.DOMoveY(MoveDistance, EnmySpeed)
+                 .SetLoops(-1, LoopType.Yoyo)
+                 .SetRelative()
+                 .SetLink(gameObject)
+                 .SetEase(Ease.Linear);
     }
 
 
     protected override void EnmyCameraUpdate()
     {
         base.EnmyCameraUpdate();
+
+        if (!Stop)
+        {
+            T_BeholderMove.Pause();
+        }
 
     }
 

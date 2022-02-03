@@ -7,6 +7,9 @@ using DG.Tweening;
 using UniRx;
 using UnityEngine.SceneManagement;
 
+/// <summary>
+/// タイトル画面のアニメーションやシーン遷移
+/// </summary>
 public class TitleAnimation : MonoBehaviour
 {
 
@@ -16,6 +19,7 @@ public class TitleAnimation : MonoBehaviour
     [SerializeField] private Text GuideText;
     [SerializeField] private Image FadePanel;
 
+    private const string SceneName = "Story";
 
     private AudioSource audioSource;
     private void Start()
@@ -35,13 +39,15 @@ public class TitleAnimation : MonoBehaviour
     private void GoSelect()
     {
         audioSource.DOFade(0, 2.5f);
-        FadePanel.DOFade(1, 3).OnComplete(()=> { SceneManager.LoadScene("StageSelect"); });
+        FadePanel.DOFade(1, 3).OnComplete(()=> { SceneManager.LoadScene(SceneName); });
     }
 
+
+    //テキストの点滅
     private void TextBlinking()
     {
         GuideText.DOFade(0, 2.0f)
-            .SetEase(Ease.InOutSine)
+            .SetEase(Ease.Linear)
             .SetLink(gameObject)
             .SetLoops(-1, LoopType.Yoyo);
     }
